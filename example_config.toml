@@ -1,0 +1,24 @@
+
+
+
+[sounds]
+
+[sounds.nasus]
+enable = true
+player = false
+
+[sounds.nasus.q]
+path = ["sounds/bonk.mp3"]
+start = "0:00"
+play_for = 2
+volume = -0.85
+
+[keys]
+
+
+[keys.b]
+enable = true
+path = ["sounds/bonk.mp3"]
+start = "0:00"
+play_for = 2
+volume = -0.85
