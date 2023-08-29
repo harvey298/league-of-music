@@ -12,6 +12,7 @@ extern crate toml;
 
 use reqwest::{Certificate, Client};
 use sounds::play;
+use tokio::sync::RwLock;
 use toml::Value;
 use serde_json::Value as SValue;
 
@@ -37,6 +38,10 @@ lazy_static! {
 
     static ref VERBOSE: bool = {
         ARGS.contains(&"--verbose".to_string()) || ARGS.contains(&"-v".to_string())
+    };
+
+    static ref STATE: Arc<RwLock<InternalState>> = {
+        Arc::new(RwLock::new(InternalState::InactiveGame))
     };
 }
 
@@ -247,19 +252,6 @@ async fn main() -> Result<()> {
 
         }
     }
-
-    // for key in KEYS {
-        
-    //     if music_file["keys"][key].is_object() {
-            
-    //         if music_file["keys"][key]["enable"].as_bool().unwrap() {
-
-
-    //         }
-
-    //     }
-
-    // }
 
     spawn(move || {
         inputbot::handle_input_events();
@@ -566,15 +558,16 @@ async fn game_check(client: Arc<Client>) -> Result<GameDetail> {
     let mut current_champ = String::new();
 
     for player in all_players {
-        let username = player["summonerName"].as_str().unwrap().replace("\"", "");
+        if let Some(username) = player["summonerName"].as_str() {
+            let username = username.replace("\"", ""); // .unwrap().replace("\"", "")
 
-        all_player_names.push(username.clone().to_string());
+            all_player_names.push(username.clone().to_string());
 
-        if my_username == username {
-            current_champ = player["championName"].as_str().unwrap().to_owned().replace("\"", "");
-            println!("Playing {current_champ}? I see, have fun!");
-        }
-
+            if my_username == username {
+                current_champ = player["championName"].as_str().unwrap().to_owned().replace("\"", "");
+                println!("Playing {current_champ}? I see, have fun!");
+            }
+        };
     }
 
     if current_champ == String::new() { bail!("Game not loaded!"); }
@@ -584,4 +577,9 @@ async fn game_check(client: Arc<Client>) -> Result<GameDetail> {
     println!("I have understood your game!");
 
     Ok(detail)
+}
+
+pub enum InternalState {
+    ActiveGame,
+    InactiveGame,
 }
